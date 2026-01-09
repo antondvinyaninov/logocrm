@@ -1,14 +1,26 @@
-# Инфраструктура проекта АСУП
+# Инфраструктура проектов
 
 ## Обзор
 
-**Проект:** АСУП - Автоматизированная Система Управления Приютом  
 **Сервер:** 88.218.121.213  
 **Панель управления:** Easypanel  
 **Провайдер:** hoztnode.net  
 **ОС:** Ubuntu 24.04 LTS  
 **Docker:** Установлен  
 **Firewall:** Отключен (ufw disabled)
+
+## Проекты на сервере
+
+### 1. LogoCRM - CRM для логопедических центров ✅
+**Статус:** Production  
+**URL:** https://test-logo-crm.crv1ic.easypanel.host  
+**Тип:** Laravel 12 + PHP 8.4 + PostgreSQL  
+**GitHub:** https://github.com/antondvinyaninov/logocrm
+
+### 2. АСУП - Автоматизированная Система Управления Приютом
+**Статус:** Deployed (требует настройки)  
+**URL:** https://test-priut.crv1ic.easypanel.host  
+**Тип:** Laravel 12 + PHP 8.4 + SQLite
 
 ## SSH Доступ
 
@@ -71,11 +83,60 @@ Easypanel - это панель управления для деплоя Docker-
 
 ## Структура сервисов
 
-### 1. АСУП - Основное приложение
+### 1. LogoCRM - Production ✅
+
+**Название сервиса:** `logo_crm`  
+**URL:** https://test-logo-crm.crv1ic.easypanel.host  
+**Тип:** Laravel 12 + PHP 8.4 + PostgreSQL  
+**Статус:** ✅ Работает
+
+#### GitHub подключение:
+- **Repository:** `https://github.com/antondvinyaninov/logocrm.git`
+- **Branch:** `main`
+
+#### База данных PostgreSQL:
+- **Service Name:** `logoCRM`
+- **Internal Host:** `test_logocrm`
+- **Database:** `logo`
+- **Username:** `logopos`
+- **Password:** `dxG0BBG0`
+- **Port:** 5432
+
+#### Переменные окружения:
+```env
+APP_NAME=LogoCRM
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://test-logo-crm.crv1ic.easypanel.host
+ASSET_URL=https://test-logo-crm.crv1ic.easypanel.host
+APP_KEY=base64:NooEi4osW85mAudAtNsz9JV06PUi1bjG7n9TlnEf8pA=
+
+DB_CONNECTION=pgsql
+DB_HOST=test_logocrm
+DB_PORT=5432
+DB_DATABASE=logo
+DB_USERNAME=logopos
+DB_PASSWORD=dxG0BBG0
+
+SESSION_DRIVER=file
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+FILESYSTEM_DISK=public
+```
+
+#### Тестовые учетные записи:
+- **SuperAdmin:** `superadmin@logoped.test` / `password`
+- **Владелец центра:** `owner@rechevichok.ru` / `password`
+- **Специалист:** `specialist@logoped.test` / `password`
+- **Родитель:** `parent@logoped.test` / `password`
+
+### 2. АСУП - Приют
 
 **Название сервиса:** `test-priut`  
 **URL:** https://test-priut.crv1ic.easypanel.host  
-**Тип:** Laravel 12 + PHP 8.4 приложение  
+**Тип:** Laravel 12 + PHP 8.4 + SQLite  
 **Статус:** Deployed (требует настройки)
 
 #### GitHub подключение:
@@ -113,7 +174,7 @@ UPLOAD_MAX_FILESIZE=120M
 POST_MAX_SIZE=120M
 ```
 
-### 2. Другие сервисы на сервере
+### 3. Другие сервисы на сервере
 
 #### Blog (Astro + React)
 **Название сервиса:** `test-github`
@@ -382,4 +443,4 @@ reboot
 ---
 
 **Дата создания:** 17 декабря 2025  
-**Последнее обновление:** 18 декабря 2025
+**Последнее обновление:** 9 января 2026

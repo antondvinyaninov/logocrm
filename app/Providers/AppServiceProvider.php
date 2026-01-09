@@ -20,6 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Принудительное использование HTTPS в production
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+        
         // Устанавливаем русскую локаль для Carbon
         \Carbon\Carbon::setLocale('ru');
         
