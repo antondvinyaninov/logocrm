@@ -20,44 +20,40 @@ sqlite3 database/database.sqlite .dump > database/production_dump.sql
 
 ## Деплой через Easypanel
 
-### Шаг 1: Создание PostgreSQL базы данных
+### Шаг 1: PostgreSQL база данных
 
-1. В Easypanel нажмите **"Create"** → **"Service"**
-2. Выберите **"PostgreSQL"**
-3. Настройте:
-   - **Name:** `logocrm-db`
-   - **Database:** `logocrm`
-   - **Username:** `logocrm`
-   - **Password:** (будет сгенерирован автоматически)
-4. Нажмите **"Create"**
-5. **Запомните или скопируйте** сгенерированный пароль!
+База данных уже создана в Easypanel:
+- **Service Name:** `logoCRM`
+- **Internal Host:** `test_logocrm`
+- **Database:** `logo`
+- **Username:** `logopos`
+- **Password:** `dxG0BBG0`
+- **Port:** 5432
 
-### Шаг 2: Подключение к Easypanel
+### Шаг 2: Создание приложения в Easypanel
 
-1. Откройте http://88.218.121.213:3000
-2. Войдите в панель управления
-
-### Шаг 2: Создание нового приложения
-
-1. Нажмите **"Create"** → **"App"**
-2. Выберите **"GitHub"** как источник
-3. Подключите репозиторий (нужно создать на GitHub)
-4. Выбер итеветку `main`
-5. Easypanel автоматически обнаружит `Dockerfile`
+Приложение уже создано:
+- **Repository:** `https://github.com/antondvinyaninov/logocrm`
+- **Branch:** `main`
+- **Dockerfile:** Обнаружен автоматически
 
 ### Шаг 3: Настройка переменных окружения
 
-В разделе **Environment** добавьте переменные из `.env.production`:
+В Easypanel в разделе **Environment** убедитесь что установлены переменные:
 
 ```env
 APP_NAME=LogoCRM
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://logocrm.crv1ic.easypanel.host
-APP_KEY=base64:ВАШ_СГЕНЕРИРОВАННЫЙ_КЛЮЧ
+APP_KEY=base64:NooEi4osW85mAudAtNsz9JV06PUi1bjG7n9TlnEf8pA=
 
-DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/database/database.sqlite
+DB_CONNECTION=pgsql
+DB_HOST=test_logocrm
+DB_PORT=5432
+DB_DATABASE=logo
+DB_USERNAME=logopos
+DB_PASSWORD=dxG0BBG0
 
 SESSION_DRIVER=file
 CACHE_DRIVER=file
@@ -75,18 +71,15 @@ MAIL_FROM_ADDRESS=noreply@logocrm.ru
 MAIL_FROM_NAME=LogoCRM
 ```
 
-### Шаг 4: Настройка домена
+**ВАЖНО:** Убедитесь что `DB_HOST=test_logocrm` (это внутренний hostname PostgreSQL сервиса)
 
-1. В разделе **Domains** Easypanel автоматически создаст поддомен
-2. Или добавьте свой домен
+### Шаг 4: Deploy
 
-### Шаг 5: Deploy
+Приложение сейчас деплоится в Easypanel. Дождитесь завершения сборки (5-10 минут).
 
-1. Нажмите **"Deploy"**
-2. Дождитесь завершения сборки (5-10 минут)
-3. Easypanel соберет Docker образ и запустит контейнер
+Проверить статус можно в Easypanel → Logs
 
-### Шаг 6: Инициализация базы данных
+### Шаг 5: Инициализация базы данных
 
 После успешного деплоя:
 
