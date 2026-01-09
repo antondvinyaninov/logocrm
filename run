@@ -1,0 +1,134 @@
+#!/usr/bin/env zsh
+
+# Цвета для вывода
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Используем PHP 8.5.1 напрямую
+export PATH="/opt/homebrew/bin:$PATH"
+PHP_BIN="/opt/homebrew/bin/php"
+
+# Порты для проверки
+LARAVEL_PORT=8000
+VITE_PORT=5173
+
+echo "${BLUE}🚀 Запуск проекта логопедического центра...${NC}\n"
+
+# Функция для проверки и освобождения порта
+check_and_free_port() {
+    local port=$1
+    local service_name=$2
+    
+    # Проверяем, занят ли порт
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+        echo "${YELLOW}⚠️  Порт $port ($service_name) занят${NC}"
+        
+        # Получаем PID процесса
+        local pid=$(lsof -ti:$port)
+        
+        if [ ! -z "$pid" ]; then
+            echo "${YELLOW}   Завершаем процесс PID: $pid${NC}"
+            kill -9 $pid 2>/dev/null
+            sleep 1
+            
+            # Проверяем, освободился ли порт
+            if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+                echo "${RED}❌ Не удалось освободить порт $port${NC}"
+                return 1
+            else
+                echo "${GREEN}✅ Порт $port освобождён${NC}"
+            fi
+        fi
+    else
+        echo "${GREEN}✅ Порт $port ($service_name) свободен${NC}"
+    fi
+    return 0
+}
+
+# Проверяем и освобождаем порты
+echo "${BLUE}📡 Проверка портов...${NC}"
+check_and_free_port $LARAVEL_PORT "Laravel"
+check_and_free_port $VITE_PORT "Vite"
+echo ""
+
+# Проверяем наличие .env файла
+if [ ! -f .env ]; then
+    echo "${YELLOW}⚠️  Файл .env не найден, копируем из .env.example${NC}"
+    cp .env.example .env
+    $PHP_BIN artisan key:generate
+    echo "${GREEN}✅ Файл .env создан${NC}\n"
+fi
+
+# Проверяем наличие базы данных
+if [ ! -f database/database.sqlite ]; then
+    echo "${YELLOW}⚠️  База данных не найдена, создаём...${NC}"
+    touch database/database.sqlite
+    $PHP_BIN artisan migrate --seed
+    echo "${GREEN}✅ База данных создана и заполнена${NC}\n"
+fi
+
+# Проверяем установку зависимостей
+if [ ! -d "vendor" ]; then
+    echo "${YELLOW}⚠️  Composer зависимости не установлены${NC}"
+    echo "${BLUE}📦 Устанавливаем composer зависимости...${NC}"
+    composer install
+    echo "${GREEN}✅ Composer зависимости установлены${NC}\n"
+fi
+
+if [ ! -d "node_modules" ]; then
+    echo "${YELLOW}⚠️  NPM зависимости не установлены${NC}"
+    echo "${BLUE}📦 Устанавливаем npm зависимости...${NC}"
+    npm install
+    echo "${GREEN}✅ NPM зависимости установлены${NC}\n"
+fi
+
+# Очищаем кэш Laravel
+echo "${BLUE}🧹 Очистка кэша...${NC}"
+$PHP_BIN artisan config:clear
+$PHP_BIN artisan cache:clear
+$PHP_BIN artisan view:clear
+$PHP_BIN artisan route:clear
+echo "${GREEN}✅ Кэш очищен${NC}\n"
+
+# Создаём директории для хранения файлов
+echo "${BLUE}📁 Проверка директорий...${NC}"
+if $PHP_BIN artisan storage:link 2>&1 | grep -q "already exists"; then
+    echo "${GREEN}✅ Symbolic link уже существует${NC}"
+else
+    $PHP_BIN artisan storage:link
+    echo "${GREEN}✅ Symbolic link создан${NC}"
+fi
+echo ""
+
+# Получаем локальный IP адрес
+LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "127.0.0.1")
+
+# Запускаем все сервисы
+echo "${GREEN}🎉 Запуск сервисов...${NC}\n"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "${GREEN}Laravel:${NC}"
+echo "  Локально:  http://localhost:$LARAVEL_PORT"
+echo "  В сети:    http://$LOCAL_IP:$LARAVEL_PORT"
+echo "${GREEN}Vite:${NC}"
+echo "  Локально:  http://localhost:$VITE_PORT"
+echo "  В сети:    http://$LOCAL_IP:$VITE_PORT"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+echo "${YELLOW}Тестовые пользователи:${NC}"
+echo "  SuperAdmin:     superadmin@logoped.test / password"
+echo "  Владелец:       owner@rechevichok.ru / password"
+echo "  Специалист:     specialist@logoped.test / password"
+echo "  Родитель:       parent@logoped.test / password"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+echo "${YELLOW}Для остановки нажмите Ctrl+C${NC}\n"
+
+# Запускаем concurrently с сервисами
+npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
+    "$PHP_BIN artisan serve --host=0.0.0.0 --port=$LARAVEL_PORT" \
+    "$PHP_BIN artisan queue:listen --tries=1" \
+    "$PHP_BIN artisan pail --timeout=0" \
+    "npm run dev" \
+    --names=server,queue,logs,vite \
+    --kill-others
