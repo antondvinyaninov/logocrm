@@ -178,7 +178,6 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')
                         ->with('success', 'Пользователь успешно удалён');
     }
-}
 
     /**
      * Войти как пользователь (impersonate)
@@ -225,3 +224,4 @@ class UserController extends Controller
 
         return redirect()->route('dashboard');
     }
+}
