@@ -179,3 +179,49 @@ class UserController extends Controller
                         ->with('success', 'Пользователь успешно удалён');
     }
 }
+
+    /**
+     * Войти как пользователь (impersonate)
+     */
+    public function impersonate(User $user)
+    {
+        // Только superadmin может входить как другие пользователи
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Только суперадминистратор может использовать эту функцию.');
+        }
+
+        // Нельзя войти как самого себя
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Вы не можете войти как самого себя.');
+        }
+
+        // Сохраняем ID оригинального пользователя в сессии
+        session(['impersonate_original_user' => auth()->id()]);
+
+        // Входим как выбранный пользователь
+        auth()->login($user);
+
+        return redirect()->route('dashboard')->with('success', "Вы вошли как {$user->name}. Для возврата нажмите кнопку в верхнем меню.");
+    }
+
+    /**
+     * Вернуться к своему аккаунту
+     */
+    public function stopImpersonate()
+    {
+        if (!session()->has('impersonate_original_user')) {
+            return redirect()->route('dashboard');
+        }
+
+        $originalUserId = session('impersonate_original_user');
+        session()->forget('impersonate_original_user');
+
+        $originalUser = User::find($originalUserId);
+        
+        if ($originalUser) {
+            auth()->login($originalUser);
+            return redirect()->route('admin.users.index')->with('success', 'Вы вернулись к своему аккаунту.');
+        }
+
+        return redirect()->route('dashboard');
+    }

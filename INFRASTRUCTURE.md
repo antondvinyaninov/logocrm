@@ -359,13 +359,44 @@ docker restart <container_name>
 
 ## Резервное копирование
 
-### Важные директории
+### LogoCRM - Автоматический бэкап PostgreSQL ✅
 
-- `~/pritunl/` - данные Pritunl
-- Easypanel и Supabase управляются через Docker volumes
+**Статус:** Настроен и работает
 
-### Создание бэкапа
+**Скрипт:** `/root/backup-logocrm.sh`  
+**Расписание:** Ежедневно в 3:00 AM (cron)  
+**Директория бэкапов:** `/root/backups/logocrm/`  
+**Хранение:** 7 дней (старые автоматически удаляются)  
+**Лог:** `/var/log/logocrm-backup.log`
 
+#### Ручной запуск бэкапа:
+```bash
+/root/backup-logocrm.sh
+```
+
+#### Проверить бэкапы:
+```bash
+ls -lh /root/backups/logocrm/
+```
+
+#### Восстановление из бэкапа:
+```bash
+# Найти нужный бэкап
+ls -lh /root/backups/logocrm/
+
+# Восстановить (замените имя файла и контейнера)
+zcat /root/backups/logocrm/logocrm_YYYYMMDD_HHMMSS.sql.gz | \
+  docker exec -i test_logocrm.1.XXXXX psql -U logopos -d logo
+```
+
+#### Скачать бэкап на локальный компьютер:
+```bash
+scp root@88.218.121.213:/root/backups/logocrm/logocrm_*.sql.gz ~/Downloads/
+```
+
+### Другие бэкапы
+
+#### Pritunl VPN
 ```bash
 # Бэкап Pritunl
 tar -czf pritunl-backup-$(date +%Y%m%d).tar.gz ~/pritunl/
@@ -374,17 +405,12 @@ tar -czf pritunl-backup-$(date +%Y%m%d).tar.gz ~/pritunl/
 scp root@88.218.121.213:~/pritunl-backup-*.tar.gz ~/Downloads/
 ```
 
-### Backup базы данных
-
+#### Supabase
 В Supabase Studio:
 1. Database → Backups
 2. Create backup
 
-### Backup изображений
-
-Изображения хранятся в Supabase Storage bucket `blog-images`. Для backup:
-1. Использовать Supabase CLI
-2. Или скачать через Storage API
+Изображения хранятся в Supabase Storage bucket `blog-images`
 
 ## Безопасность
 

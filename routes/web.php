@@ -38,6 +38,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     
     // Управление всеми пользователями платформы (только SuperAdmin)
     Route::resource('users', UserController::class);
+    Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
+    Route::post('stop-impersonate', [UserController::class, 'stopImpersonate'])->name('users.stop-impersonate');
     
     // Управление всеми платежами платформы (только SuperAdmin)
     Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);

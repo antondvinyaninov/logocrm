@@ -112,6 +112,16 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end space-x-2">
+                                            @if($user->id !== auth()->id())
+                                                <form action="{{ route('admin.users.impersonate', $user) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="text-purple-600 hover:text-purple-900" title="Войти как пользователь">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <a href="{{ route('admin.users.show', $user) }}" class="text-green-600 hover:text-green-900" title="Просмотр">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
