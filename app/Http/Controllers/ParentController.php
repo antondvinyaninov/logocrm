@@ -113,6 +113,7 @@ class ParentController extends Controller
         
         // Создаем профиль родителя
         $parent->parentProfile()->create([
+            'full_name' => $validated['name'],
             'phone' => $validated['phone'] ?? null,
         ]);
         
