@@ -75,6 +75,9 @@ class ChildController extends Controller
         
         $data = $request->validated();
         
+        // Добавляем organization_id
+        $data['organization_id'] = $user->organization_id;
+        
         // Если родитель создаёт ребёнка, автоматически привязываем к его профилю
         if ($user->role === 'parent' && $user->parentProfile) {
             $data['parent_id'] = $user->parentProfile->id;

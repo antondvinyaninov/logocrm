@@ -109,10 +109,14 @@ class SpecialistProfileController extends Controller
             'certificates' => 'nullable|array',
             'certificates.*' => 'string|max:500',
             'price_per_session' => 'nullable|numeric|min:0',
-            'available_online' => 'boolean',
-            'available_offline' => 'boolean',
+            'available_online' => 'nullable|boolean',
+            'available_offline' => 'nullable|boolean',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        // Обработка чекбоксов (если не отмечены, они не приходят в запросе)
+        $validated['available_online'] = $request->has('available_online');
+        $validated['available_offline'] = $request->has('available_offline');
 
         // Обработка загрузки фото
         if ($request->hasFile('photo')) {
