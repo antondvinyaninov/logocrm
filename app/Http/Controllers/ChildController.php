@@ -104,7 +104,8 @@ class ChildController extends Controller
             'therapySessions.specialist', 
             'homeworks',
             'conclusions.specialist.user',
-            'specialistHistory.specialist.user'
+            'specialistHistory.specialist.user',
+            'externalReferrals.creator'
         ]);
         
         // Загружаем список специалистов, если у ребёнка нет специалиста

@@ -286,6 +286,245 @@
                 </div>
             @endif
 
+            <!-- Направления к внешним специалистам -->
+            @if(auth()->user()->isSpecialist() || auth()->user()->isOrganization())
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                                <h3 class="text-lg font-semibold text-gray-900">Направления к специалистам</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <!-- Форма добавления направления -->
+                        <div x-data="{ showAddForm: false }" class="mb-6">
+                            <div x-show="!showAddForm">
+                                <button @click="showAddForm = true" type="button"
+                                    class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors">
+                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Добавить направление
+                                </button>
+                            </div>
+                            
+                            <form x-show="showAddForm" x-cloak method="POST" action="{{ route('children.referrals.store', $child) }}" 
+                                class="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                                @csrf
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип специалиста *</label>
+                                            <select name="specialist_type" required
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                                <option value="">Выберите специалиста</option>
+                                                <option value="Невролог">Невролог</option>
+                                                <option value="Психолог">Психолог</option>
+                                                <option value="Психиатр">Психиатр</option>
+                                                <option value="Офтальмолог">Офтальмолог</option>
+                                                <option value="Отоларинголог (ЛОР)">Отоларинголог (ЛОР)</option>
+                                                <option value="Ортопед">Ортопед</option>
+                                                <option value="Эндокринолог">Эндокринолог</option>
+                                                <option value="Кардиолог">Кардиолог</option>
+                                                <option value="Другой">Другой</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата направления *</label>
+                                            <input type="date" name="referral_date" value="{{ date('Y-m-d') }}" required
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Планируемая дата приема</label>
+                                        <input type="date" name="appointment_date"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Причина направления</label>
+                                        <textarea name="reason" rows="3"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                            placeholder="Укажите причину направления к специалисту..."></textarea>
+                                    </div>
+                                    
+                                    <div class="flex gap-3">
+                                        <button type="submit"
+                                            class="px-4 py-2 bg-yellow-400 text-gray-900 rounded-md hover:bg-yellow-500 font-medium">
+                                            Создать направление
+                                        </button>
+                                        <button type="button" @click="showAddForm = false"
+                                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Список направлений -->
+                        @if($child->externalReferrals && $child->externalReferrals->count() > 0)
+                            <div class="space-y-4">
+                                @foreach($child->externalReferrals as $referral)
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" 
+                                        x-data="{ showEditForm: false }">
+                                        <div x-show="!showEditForm">
+                                            <div class="flex items-start justify-between mb-3">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-3 mb-2">
+                                                        <h4 class="text-base font-semibold text-gray-900">{{ $referral->specialist_type }}</h4>
+                                                        <span class="px-3 py-1 text-xs rounded-full bg-{{ $referral->status_color }}-100 text-{{ $referral->status_color }}-800">
+                                                            {{ $referral->status_label }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-sm text-gray-600 space-y-1">
+                                                        <p><strong>Дата направления:</strong> {{ $referral->referral_date->format('d.m.Y') }}</p>
+                                                        @if($referral->appointment_date)
+                                                            <p><strong>Планируемая дата приема:</strong> {{ $referral->appointment_date->format('d.m.Y') }}</p>
+                                                        @endif
+                                                        @if($referral->visit_date)
+                                                            <p><strong>Дата посещения:</strong> {{ $referral->visit_date->format('d.m.Y') }}</p>
+                                                        @endif
+                                                        @if($referral->reason)
+                                                            <p class="mt-2"><strong>Причина:</strong> {{ $referral->reason }}</p>
+                                                        @endif
+                                                        @if($referral->results)
+                                                            <p class="mt-2"><strong>Результаты:</strong> {{ $referral->results }}</p>
+                                                        @endif
+                                                        @if($referral->recommendations)
+                                                            <p class="mt-2"><strong>Рекомендации:</strong> {{ $referral->recommendations }}</p>
+                                                        @endif
+                                                    </div>
+                                                    
+                                                    @if($referral->attachments && count($referral->attachments) > 0)
+                                                        <div class="mt-3 border-t border-gray-200 pt-3">
+                                                            <p class="text-xs font-medium text-gray-500 mb-2">Прикрепленные файлы:</p>
+                                                            <div class="flex flex-wrap gap-2">
+                                                                @foreach($referral->attachments as $attachment)
+                                                                    <a href="{{ Storage::url($attachment) }}" target="_blank"
+                                                                        class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm">
+                                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                                                        </svg>
+                                                                        {{ basename($attachment) }}
+                                                                    </a>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    <p class="text-xs text-gray-400 mt-3">
+                                                        Создано: {{ $referral->creator->name }} • {{ $referral->created_at->format('d.m.Y H:i') }}
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="flex gap-2">
+                                                    <button @click="showEditForm = true" type="button"
+                                                        class="text-indigo-600 hover:text-indigo-800">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                    <form method="POST" action="{{ route('children.referrals.destroy', [$child, $referral]) }}" 
+                                                        onsubmit="return confirm('Удалить это направление?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-800">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Форма редактирования -->
+                                        <form x-show="showEditForm" x-cloak method="POST" action="{{ route('children.referrals.update', [$child, $referral]) }}" 
+                                            enctype="multipart/form-data" class="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="space-y-4">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Статус *</label>
+                                                        <select name="status" required
+                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                                            <option value="pending" {{ $referral->status === 'pending' ? 'selected' : '' }}>Ожидает записи</option>
+                                                            <option value="scheduled" {{ $referral->status === 'scheduled' ? 'selected' : '' }}>Запись назначена</option>
+                                                            <option value="completed" {{ $referral->status === 'completed' ? 'selected' : '' }}>Посещение состоялось</option>
+                                                            <option value="cancelled" {{ $referral->status === 'cancelled' ? 'selected' : '' }}>Отменено</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">Планируемая дата приема</label>
+                                                        <input type="date" name="appointment_date" value="{{ $referral->appointment_date?->format('Y-m-d') }}"
+                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                                    </div>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Дата посещения</label>
+                                                    <input type="date" name="visit_date" value="{{ $referral->visit_date?->format('Y-m-d') }}"
+                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Результаты обследования</label>
+                                                    <textarea name="results" rows="3"
+                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                                        placeholder="Опишите результаты обследования...">{{ $referral->results }}</textarea>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Рекомендации специалиста</label>
+                                                    <textarea name="recommendations" rows="3"
+                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                                        placeholder="Рекомендации специалиста...">{{ $referral->recommendations }}</textarea>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Прикрепить файлы</label>
+                                                    <input type="file" name="attachments[]" multiple
+                                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200">
+                                                    <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (макс. 10 МБ каждый)</p>
+                                                </div>
+                                                
+                                                <div class="flex gap-3">
+                                                    <button type="submit"
+                                                        class="px-4 py-2 bg-yellow-400 text-gray-900 rounded-md hover:bg-yellow-500 font-medium">
+                                                        Сохранить изменения
+                                                    </button>
+                                                    <button type="button" @click="showEditForm = false"
+                                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                                                        Отмена
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-8">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                                <p class="mt-2 text-gray-400 italic">Направлений пока нет</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <!-- История занятий -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-white p-6">

@@ -96,4 +96,9 @@ class Child extends Model
     {
         return $this->hasMany(ChildSpecialistHistory::class)->orderBy('started_at', 'desc');
     }
+
+    public function externalReferrals()
+    {
+        return $this->hasMany(ExternalSpecialistReferral::class)->orderBy('referral_date', 'desc');
+    }
 }

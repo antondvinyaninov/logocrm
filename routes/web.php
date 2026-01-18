@@ -85,6 +85,14 @@ Route::middleware(['auth'])->prefix('lk')->group(function () {
     Route::delete('children/{child}/conclusions/{conclusion}', [\App\Http\Controllers\ChildController::class, 'destroyConclusion'])
         ->name('children.conclusions.destroy');
     
+    // Направления к внешним специалистам
+    Route::post('children/{child}/referrals', [\App\Http\Controllers\ExternalReferralController::class, 'store'])
+        ->name('children.referrals.store');
+    Route::put('children/{child}/referrals/{referral}', [\App\Http\Controllers\ExternalReferralController::class, 'update'])
+        ->name('children.referrals.update');
+    Route::delete('children/{child}/referrals/{referral}', [\App\Http\Controllers\ExternalReferralController::class, 'destroy'])
+        ->name('children.referrals.destroy');
+    
     // Занятия
     Route::resource('sessions', \App\Http\Controllers\SessionController::class);
     Route::post('sessions/{session}/move', [\App\Http\Controllers\SessionController::class, 'move'])->name('sessions.move');
