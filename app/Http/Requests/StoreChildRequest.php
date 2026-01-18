@@ -23,10 +23,6 @@ class StoreChildRequest extends FormRequest
         // Родитель не может выбирать parent_id (автоматически)
         if ($user->role !== 'parent') {
             $rules['parent_id'] = ['required', 'exists:parent_profiles,id'];
-            $rules['anamnesis'] = ['nullable', 'string'];
-            $rules['goals'] = ['nullable', 'string'];
-            $rules['tags'] = ['nullable', 'array'];
-            $rules['tags.*'] = ['string', 'max:50'];
         }
 
         // Родители и админ могут выбирать специалиста

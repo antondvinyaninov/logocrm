@@ -96,42 +96,6 @@
                                 @enderror
                             </div>
                         @endif
-
-                        <!-- Анамнез -->
-                        <div class="mb-6">
-                            <label for="anamnesis" class="block text-sm font-medium text-gray-700 mb-2">Анамнез</label>
-                            <textarea name="anamnesis" id="anamnesis" rows="4"
-                                      class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 @error('anamnesis') border-red-500 @enderror">{{ old('anamnesis') }}</textarea>
-                            @error('anamnesis')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-1 text-sm text-gray-500">История развития, особенности здоровья</p>
-                        </div>
-
-                        <!-- Цели -->
-                        <div class="mb-6">
-                            <label for="goals" class="block text-sm font-medium text-gray-700 mb-2">Цели занятий</label>
-                            <textarea name="goals" id="goals" rows="4"
-                                      class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 @error('goals') border-red-500 @enderror">{{ old('goals') }}</textarea>
-                            @error('goals')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-1 text-sm text-gray-500">Что планируется достичь в процессе занятий</p>
-                        </div>
-
-                        <!-- Теги -->
-                        <div class="mb-6">
-                            <label for="tags_input" class="block text-sm font-medium text-gray-700 mb-2">Теги</label>
-                            <div id="tags-container" class="flex flex-wrap gap-2 mb-2"></div>
-                            <div class="flex gap-2">
-                                <input type="text" id="tags_input" placeholder="Добавить тег..."
-                                       class="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                <button type="button" onclick="addTag()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                    Добавить
-                                </button>
-                            </div>
-                            <p class="mt-1 text-sm text-gray-500">Например: дислалия, заикание, ОНР</p>
-                        </div>
                     @endif
 
                     <!-- Кнопки -->
@@ -147,56 +111,4 @@
             </div>
         </div>
     </div>
-
-    @if(auth()->user()->role !== 'parent')
-        <script>
-            let tags = @json(old('tags', []));
-
-            function renderTags() {
-                const container = document.getElementById('tags-container');
-                container.innerHTML = '';
-                
-                tags.forEach((tag, index) => {
-                    const tagEl = document.createElement('div');
-                    tagEl.className = 'flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm';
-                    tagEl.innerHTML = `
-                        <span>${tag}</span>
-                        <button type="button" onclick="removeTag(${index})" class="text-blue-600 hover:text-blue-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <input type="hidden" name="tags[]" value="${tag}">
-                    `;
-                    container.appendChild(tagEl);
-                });
-            }
-
-            function addTag() {
-                const input = document.getElementById('tags_input');
-                const tag = input.value.trim();
-                
-                if (tag && !tags.includes(tag)) {
-                    tags.push(tag);
-                    renderTags();
-                    input.value = '';
-                }
-            }
-
-            function removeTag(index) {
-                tags.splice(index, 1);
-                renderTags();
-            }
-
-            document.getElementById('tags_input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag();
-                }
-            });
-
-            // Инициализация
-            renderTags();
-        </script>
-    @endif
 </x-home-layout>

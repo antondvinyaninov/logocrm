@@ -20,13 +20,9 @@ class UpdateChildRequest extends FormRequest
             'birth_date' => ['required', 'date', 'before:today'],
         ];
 
-        // Родитель не может менять parent_id и не видит медицинские поля
+        // Родитель не может менять parent_id
         if ($user->role !== 'parent') {
             $rules['parent_id'] = ['required', 'exists:parent_profiles,id'];
-            $rules['anamnesis'] = ['nullable', 'string'];
-            $rules['goals'] = ['nullable', 'string'];
-            $rules['tags'] = ['nullable', 'array'];
-            $rules['tags.*'] = ['string', 'max:50'];
         }
 
         // Родители и админ могут выбирать специалиста
