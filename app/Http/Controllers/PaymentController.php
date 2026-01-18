@@ -19,9 +19,10 @@ class PaymentController extends Controller
 
         $organizationId = auth()->user()->organization_id;
         
-        // Получаем завершенные занятия за текущий месяц
+        // Получаем завершенные и подтвержденные занятия за текущий месяц
+        // Показываем: done (завершено) или confirmed (подтверждено, родитель пришел)
         $completedSessions = TherapySession::where('organization_id', $organizationId)
-            ->where('status', 'done')
+            ->whereIn('status', ['done', 'confirmed'])
             ->whereMonth('start_time', Carbon::now()->month)
             ->whereYear('start_time', Carbon::now()->year)
             ->with(['child.parent', 'specialist.user'])
