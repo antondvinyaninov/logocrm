@@ -63,6 +63,8 @@ Route::middleware(['auth'])->prefix('lk')->group(function () {
         ->name('sessions.mark-paid');
     Route::post('sessions/{session}/mark-unpaid', [\App\Http\Controllers\PaymentController::class, 'markAsUnpaid'])
         ->name('sessions.mark-unpaid');
+    Route::post('sessions/{session}/update-price', [\App\Http\Controllers\PaymentController::class, 'updatePrice'])
+        ->name('sessions.update-price');
     
     // Отзывы (Organization и Specialist)
     Route::get('reviews', [\App\Http\Controllers\ReviewController::class, 'index'])->name('reviews.index');

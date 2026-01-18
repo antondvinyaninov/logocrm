@@ -11,6 +11,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-6 p-4 bg-red-100 border border-red-200 text-red-800 rounded-lg">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Дашборд -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Должны оплатить -->
@@ -123,7 +129,31 @@
                                 {{ $session->specialist->full_name }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                {{ $session->price ? number_format($session->price, 0, ',', ' ') . ' ₽' : '—' }}
+                                <div x-data="{ editing: false, price: {{ $session->price ?? 0 }} }">
+                                    <div x-show="!editing" class="flex items-center gap-2">
+                                        <span>{{ $session->price ? number_format($session->price, 0, ',', ' ') . ' ₽' : '—' }}</span>
+                                        <button @click="editing = true" type="button" class="text-blue-600 hover:text-blue-900" title="Изменить стоимость">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <form x-show="editing" x-cloak action="{{ route('sessions.update-price', $session) }}" method="POST" class="flex items-center gap-2">
+                                        @csrf
+                                        <input type="number" name="price" x-model="price" step="1" min="0" required
+                                            class="w-24 px-2 py-1 text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                                        <button type="submit" class="text-green-600 hover:text-green-900" title="Сохранить">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                        <button @click="editing = false" type="button" class="text-gray-600 hover:text-gray-900" title="Отмена">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($session->payment_status === 'paid')
@@ -141,14 +171,22 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 @if($session->payment_status === 'unpaid')
-                                    <form action="{{ route('sessions.mark-paid', $session) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="text-green-600 hover:text-green-900" title="Отметить как оплаченное">
+                                    @if($session->price && $session->price > 0)
+                                        <form action="{{ route('sessions.mark-paid', $session) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="text-green-600 hover:text-green-900" title="Отметить как оплаченное">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-gray-400" title="Сначала укажите стоимость">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                             </svg>
-                                        </button>
-                                    </form>
+                                        </span>
+                                    @endif
                                 @else
                                     <form action="{{ route('sessions.mark-unpaid', $session) }}" method="POST" class="inline">
                                         @csrf

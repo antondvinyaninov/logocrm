@@ -173,6 +173,11 @@ class PaymentController extends Controller
             abort(403, 'Доступ запрещен');
         }
 
+        // Проверяем, что указана стоимость
+        if (!$session->price || $session->price <= 0) {
+            return back()->with('error', 'Невозможно отметить как оплаченное: не указана стоимость занятия');
+        }
+
         $session->update([
             'payment_status' => 'paid',
             'paid_at' => now(),
@@ -197,5 +202,26 @@ class PaymentController extends Controller
         ]);
 
         return back()->with('success', 'Занятие отмечено как неоплаченное');
+    }
+    
+    public function updatePrice(Request $request, TherapySession $session)
+    {
+        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        if ($session->organization_id !== auth()->user()->organization_id) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        $validated = $request->validate([
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $session->update([
+            'price' => $validated['price'],
+        ]);
+
+        return back()->with('success', 'Стоимость занятия обновлена');
     }
 }
