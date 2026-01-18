@@ -165,8 +165,9 @@ class PaymentController extends Controller
     
     public function markAsPaid(Request $request, TherapySession $session)
     {
-        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
-            abort(403, 'Доступ запрещен');
+        // Только организация может отмечать оплату
+        if (!auth()->user()->isOrganization()) {
+            abort(403, 'Только владелец организации может отмечать оплату');
         }
 
         if ($session->organization_id !== auth()->user()->organization_id) {
@@ -188,8 +189,9 @@ class PaymentController extends Controller
     
     public function markAsUnpaid(Request $request, TherapySession $session)
     {
-        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
-            abort(403, 'Доступ запрещен');
+        // Только организация может отменять оплату
+        if (!auth()->user()->isOrganization()) {
+            abort(403, 'Только владелец организации может отменять оплату');
         }
 
         if ($session->organization_id !== auth()->user()->organization_id) {
@@ -206,8 +208,9 @@ class PaymentController extends Controller
     
     public function updatePrice(Request $request, TherapySession $session)
     {
-        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
-            abort(403, 'Доступ запрещен');
+        // Только организация может менять стоимость
+        if (!auth()->user()->isOrganization()) {
+            abort(403, 'Только владелец организации может менять стоимость');
         }
 
         if ($session->organization_id !== auth()->user()->organization_id) {
