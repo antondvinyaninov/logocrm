@@ -9,7 +9,12 @@
     </x-slot>
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <form method="POST" action="{{ route('parents.store') }}" class="p-6" x-data="{ addChild: false, children: [] }">
+        <form method="POST" action="{{ route('parents.store') }}" class="p-6" x-data="{ 
+            addChild: false, 
+            children: [],
+            email: '{{ old('email') }}',
+            hasEmail() { return this.email && this.email.trim().length > 0; }
+        }">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -25,9 +30,10 @@
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" id="email" x-model="email" value="{{ old('email') }}"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <p class="mt-1 text-xs text-gray-500">Если не указан, родитель будет добавлен как контакт без возможности входа</p>
                     @error('email')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -43,24 +49,40 @@
                     @enderror
                 </div>
 
-                <!-- Пароль (только для организаций) -->
+                <!-- Пароль (только для организаций и только если указан email) -->
                 @if(Auth::user()->isOrganization())
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Пароль *</label>
-                        <input type="password" name="password" id="password" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <p class="mt-1 text-xs text-gray-500">Родитель сможет войти в систему с этим паролем</p>
-                        @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <template x-if="hasEmail()">
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">Пароль *</label>
+                            <input type="password" name="password" id="password" :required="hasEmail()"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <p class="mt-1 text-xs text-gray-500">Родитель сможет войти в систему с этим паролем</p>
+                            @error('password')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </template>
 
                     <!-- Подтверждение пароля -->
-                    <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Подтверждение пароля *</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    </div>
+                    <template x-if="hasEmail()">
+                        <div>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Подтверждение пароля *</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" :required="hasEmail()"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </template>
+                    
+                    <!-- Информационное сообщение когда email не указан -->
+                    <template x-if="!hasEmail()">
+                        <div class="md:col-span-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                <p class="text-sm text-blue-800">
+                                    <strong>Примечание:</strong> Родитель будет добавлен как контакт без учетной записи. 
+                                    Укажите email, чтобы создать учетную запись с возможностью входа в систему.
+                                </p>
+                            </div>
+                        </div>
+                    </template>
                 @else
                     <div class="md:col-span-2">
                         <div class="bg-blue-50 border border-blue-200 rounded-md p-4">

@@ -54,8 +54,12 @@ check_and_free_port $LARAVEL_PORT "Laravel"
 check_and_free_port $VITE_PORT "Vite"
 echo ""
 
-# Проверяем наличие .env файла
-if [ ! -f .env ]; then
+# Используем .env.local для локальной разработки
+if [ -f .env.local ]; then
+    echo "${BLUE}📝 Используем .env.local для локальной разработки${NC}"
+    cp .env.local .env
+    echo "${GREEN}✅ Конфигурация обновлена${NC}\n"
+elif [ ! -f .env ]; then
     echo "${YELLOW}⚠️  Файл .env не найден, копируем из .env.example${NC}"
     cp .env.example .env
     $PHP_BIN artisan key:generate

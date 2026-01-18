@@ -30,7 +30,7 @@
                     <!-- Дата рождения -->
                     <div class="mb-6">
                         <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-2">Дата рождения *</label>
-                        <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $child->birth_date) }}" required
+                        <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $child->birth_date?->format('Y-m-d')) }}" required
                                max="{{ date('Y-m-d') }}"
                                class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 @error('birth_date') border-red-500 @enderror">
                         @error('birth_date')

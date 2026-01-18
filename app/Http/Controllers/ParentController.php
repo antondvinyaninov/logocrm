@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ParentProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -75,10 +76,10 @@ class ParentController extends Controller
             abort(403);
         }
         
-        // Для организаций пароль обязателен, для специалистов - нет
+        // Валидация: пароль обязателен только если указан email и пользователь - организация
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'children' => 'nullable|array',
             'children.*.name' => 'required|string|max:255',
@@ -86,36 +87,46 @@ class ParentController extends Controller
             'children.*.diagnosis' => 'nullable|string|max:255',
         ];
         
-        if ($user->isOrganization()) {
+        // Пароль требуется только если указан email и пользователь - организация
+        if ($user->isOrganization() && $request->filled('email')) {
             $rules['password'] = 'required|string|min:8|confirmed';
         }
         
         $validated = $request->validate($rules);
         
-        // Создаем родителя
-        $parentData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => 'parent',
-            'organization_id' => $user->organization_id,
-        ];
-        
-        // Организация создает полноценную учетную запись с паролем
-        if ($user->isOrganization() && !empty($validated['password'])) {
-            $parentData['password'] = Hash::make($validated['password']);
+        // Если email указан - создаём пользователя
+        if (!empty($validated['email'])) {
+            // Создаем родителя с учетной записью
+            $parentData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'role' => 'parent',
+                'organization_id' => $user->organization_id,
+            ];
+            
+            // Организация создает полноценную учетную запись с паролем
+            if ($user->isOrganization() && !empty($validated['password'])) {
+                $parentData['password'] = Hash::make($validated['password']);
+            } else {
+                // Специалист добавляет родителя как контакт без пароля
+                $parentData['password'] = null;
+            }
+            
+            $parent = User::create($parentData);
+            
+            // Создаем профиль родителя
+            $parentProfile = $parent->parentProfile()->create([
+                'full_name' => $validated['name'],
+                'phone' => $validated['phone'] ?? null,
+            ]);
         } else {
-            // Специалист добавляет родителя как контакт без пароля
-            // Родитель сможет зарегистрироваться позже
-            $parentData['password'] = null;
+            // Если email не указан - создаём только профиль без пользователя
+            $parentProfile = ParentProfile::create([
+                'full_name' => $validated['name'],
+                'phone' => $validated['phone'] ?? null,
+                'organization_id' => $user->organization_id,
+            ]);
         }
-        
-        $parent = User::create($parentData);
-        
-        // Создаем профиль родителя
-        $parent->parentProfile()->create([
-            'full_name' => $validated['name'],
-            'phone' => $validated['phone'] ?? null,
-        ]);
         
         // Создаем детей если они указаны
         if (!empty($validated['children'])) {
@@ -124,7 +135,7 @@ class ParentController extends Controller
                     'name' => $childData['name'],
                     'age' => $childData['age'],
                     'diagnosis' => $childData['diagnosis'] ?? null,
-                    'parent_id' => $parent->id,
+                    'parent_id' => $parentProfile->id,
                     'organization_id' => $user->organization_id,
                 ]);
             }
@@ -132,9 +143,7 @@ class ParentController extends Controller
         
         return redirect()->route('parents.index')
             ->with('success', 'Родитель успешно добавлен');
-    }
-
-    public function edit(User $parent)
+    }    public function edit(User $parent)
     {
         $user = Auth::user();
         
