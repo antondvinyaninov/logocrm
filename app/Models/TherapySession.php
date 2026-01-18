@@ -15,9 +15,12 @@ class TherapySession extends Model
         'specialist_id',
         'start_time',
         'duration_minutes',
+        'price',
         'type',
         'format',
         'status',
+        'payment_status',
+        'paid_at',
         'organization_id',
         'notes',
         'service_id',
@@ -27,7 +30,9 @@ class TherapySession extends Model
 
     protected $casts = [
         'start_time' => 'datetime',
+        'paid_at' => 'date',
         'games_used' => 'array',
+        'price' => 'decimal:2',
     ];
 
     public function child()

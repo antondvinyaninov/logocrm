@@ -59,6 +59,10 @@ Route::middleware(['auth'])->prefix('lk')->group(function () {
     
     // Финансы организации (Organization и Specialist)
     Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+    Route::post('sessions/{session}/mark-paid', [\App\Http\Controllers\PaymentController::class, 'markAsPaid'])
+        ->name('sessions.mark-paid');
+    Route::post('sessions/{session}/mark-unpaid', [\App\Http\Controllers\PaymentController::class, 'markAsUnpaid'])
+        ->name('sessions.mark-unpaid');
     
     // Отзывы (Organization и Specialist)
     Route::get('reviews', [\App\Http\Controllers\ReviewController::class, 'index'])->name('reviews.index');

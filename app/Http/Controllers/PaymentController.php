@@ -3,23 +3,69 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\TherapySession;
+use App\Models\Child;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Organization и Specialist видят платежи своей организации
         if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
             abort(403, 'Доступ запрещен');
         }
 
-        $payments = Payment::where('organization_id', auth()->user()->organization_id)
-            ->with(['child', 'parent'])
-            ->orderBy('payment_date', 'desc')
-            ->paginate(15);
+        $organizationId = auth()->user()->organization_id;
+        
+        // Получаем завершенные занятия за текущий месяц
+        $completedSessions = TherapySession::where('organization_id', $organizationId)
+            ->where('status', 'done')
+            ->whereMonth('start_time', Carbon::now()->month)
+            ->whereYear('start_time', Carbon::now()->year)
+            ->with(['child.parent', 'specialist.user'])
+            ->orderBy('start_time', 'desc')
+            ->get();
+        
+        // Статистика
+        $totalDue = $completedSessions->where('payment_status', 'unpaid')->sum('price');
+        $totalPaid = $completedSessions->where('payment_status', 'paid')->sum('price');
+        
+        // Должники (дети с неоплаченными занятиями)
+        $debtors = $completedSessions->where('payment_status', 'unpaid')
+            ->groupBy('child_id')
+            ->map(function ($sessions) {
+                $child = $sessions->first()->child;
+                return [
+                    'child' => $child,
+                    'debt' => $sessions->sum('price'),
+                    'sessions_count' => $sessions->count(),
+                ];
+            })->values();
+        
+        // План на следующий месяц (запланированные занятия)
+        $nextMonthStart = Carbon::now()->addMonth()->startOfMonth();
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+        
+        $nextMonthSessions = TherapySession::where('organization_id', $organizationId)
+            ->whereBetween('start_time', [$nextMonthStart, $nextMonthEnd])
+            ->whereIn('status', ['planned', 'confirmed'])
+            ->get();
+        
+        $nextMonthPlan = $nextMonthSessions->sum('price');
+        
+        // Фильтр должников
+        $showDebtors = $request->has('debtors');
 
-        return view('payments.index', compact('payments'));
+        return view('payments.index', compact(
+            'completedSessions',
+            'totalDue',
+            'totalPaid',
+            'debtors',
+            'nextMonthPlan',
+            'showDebtors'
+        ));
     }
 
     public function create()
@@ -114,5 +160,41 @@ class PaymentController extends Controller
 
         return redirect()->route('payments.index')
             ->with('success', 'Платеж успешно удален');
+    }
+    
+    public function markAsPaid(Request $request, TherapySession $session)
+    {
+        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        if ($session->organization_id !== auth()->user()->organization_id) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        $session->update([
+            'payment_status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        return back()->with('success', 'Занятие отмечено как оплаченное');
+    }
+    
+    public function markAsUnpaid(Request $request, TherapySession $session)
+    {
+        if (!auth()->user()->isOrganization() && !auth()->user()->isSpecialist()) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        if ($session->organization_id !== auth()->user()->organization_id) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        $session->update([
+            'payment_status' => 'unpaid',
+            'paid_at' => null,
+        ]);
+
+        return back()->with('success', 'Занятие отмечено как неоплаченное');
     }
 }
