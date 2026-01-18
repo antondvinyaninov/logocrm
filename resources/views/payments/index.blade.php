@@ -44,7 +44,7 @@
                 </div>
                 <p class="text-3xl font-bold text-gray-900">{{ number_format($totalPaid, 0, ',', ' ') }} ₽</p>
                 <a href="{{ route('payments.index', ['debtors' => 1]) }}" class="text-sm text-indigo-600 hover:text-indigo-900 mt-1 inline-block">
-                    Посмотреть должников →
+                    Посмотреть должников ({{ $debtors->count() }}) →
                 </a>
             </div>
         </div>
@@ -64,43 +64,33 @@
         </div>
     </div>
 
-    <!-- Список должников (если выбран фильтр) -->
-    @if($showDebtors && $debtors->count() > 0)
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
-            <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Должники</h2>
-                    <a href="{{ route('payments.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                        ← Назад к списку занятий
-                    </a>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    @foreach($debtors as $debtor)
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-base font-semibold text-gray-900">{{ $debtor['child']->full_name }}</h3>
-                                    <p class="text-sm text-gray-600">Родитель: {{ $debtor['child']->parent->full_name ?? '—' }}</p>
-                                    <p class="text-sm text-gray-500 mt-1">Неоплаченных занятий: {{ $debtor['sessions_count'] }}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-2xl font-bold text-red-600">{{ number_format($debtor['debt'], 0, ',', ' ') }} ₽</p>
-                                    <p class="text-sm text-gray-500">задолженность</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- Список завершенных занятий -->
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 class="text-lg font-semibold text-gray-900">Завершенные занятия за {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    @if($showDebtors)
+                        Неоплаченные занятия за {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                    @else
+                        Завершенные занятия за {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                    @endif
+                </h2>
+                @if($showDebtors)
+                    <a href="{{ route('payments.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                        ← Показать все занятия
+                    </a>
+                @endif
+            </div>
+            @if($showDebtors)
+                <div class="mt-2 flex items-center gap-2">
+                    <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full">
+                        Фильтр: только неоплаченные
+                    </span>
+                    <span class="text-sm text-gray-600">
+                        Найдено занятий: {{ $completedSessions->count() }} на сумму {{ number_format($totalDue, 0, ',', ' ') }} ₽
+                    </span>
+                </div>
+            @endif
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">

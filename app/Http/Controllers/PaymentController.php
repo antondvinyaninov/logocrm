@@ -58,6 +58,11 @@ class PaymentController extends Controller
         
         // Фильтр должников
         $showDebtors = $request->has('debtors');
+        
+        // Если включен фильтр должников, показываем только неоплаченные
+        if ($showDebtors) {
+            $completedSessions = $completedSessions->where('payment_status', 'unpaid');
+        }
 
         return view('payments.index', compact(
             'completedSessions',
