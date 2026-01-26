@@ -234,28 +234,36 @@ class SpecialistProfileController extends Controller
      */
     public function saveCalendar(Request $request)
     {
-        $specialist = auth()->user()->specialistProfile;
-        
-        if (!$specialist) {
-            return response()->json(['success' => false, 'message' => 'Профиль специалиста не найден'], 404);
+        try {
+            $specialist = auth()->user()->specialistProfile;
+            
+            if (!$specialist) {
+                return response()->json(['success' => false, 'message' => 'Профиль специалиста не найден'], 404);
+            }
+
+            $validated = $request->validate([
+                'workingDays' => 'nullable|array',
+                'templates' => 'nullable|array',
+            ]);
+
+            // Сохраняем данные в JSON формате в таблице specialist_profiles
+            $specialist->update([
+                'work_calendar' => [
+                    'workingDays' => $validated['workingDays'] ?? [],
+                    'templates' => $validated['templates'] ?? [],
+                ]
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Календарь успешно сохранён'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Ошибка сохранения календаря: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при сохранении: ' . $e->getMessage()
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'workingDays' => 'required|array',
-            'templates' => 'required|array',
-        ]);
-
-        // Сохраняем данные в JSON формате в таблице specialist_profiles
-        $specialist->update([
-            'work_calendar' => json_encode([
-                'workingDays' => $validated['workingDays'],
-                'templates' => $validated['templates'],
-            ])
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Календарь успешно сохранён'
-        ]);
     }
 }

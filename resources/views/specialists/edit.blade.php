@@ -516,30 +516,34 @@
                                     
                                     <!-- Правая часть: поля ввода времени -->
                                     <div x-show="isWorking(day)" x-transition class="flex-1 space-y-1" @click.stop>
-                                        <!-- Рабочее время -->
-                                        <input type="time" 
-                                               x-model="getWorkTime(day).start"
-                                               class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                               style="font-size: 10px;">
-                                        <input type="time" 
-                                               x-model="getWorkTime(day).end"
-                                               class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                               style="font-size: 10px;">
-                                        
-                                        <!-- Поля перерыва -->
-                                        <div x-show="getWorkTime(day)?.hasBreak" x-transition class="space-y-1 pt-1 border-t border-gray-200">
-                                            <div class="text-xs text-gray-400 text-center" style="font-size: 9px;">Перерыв</div>
-                                            <input type="time" 
-                                                   x-model="getWorkTime(day).breakStart"
-                                                   placeholder="--:--"
-                                                   class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                                   style="font-size: 10px;">
-                                            <input type="time" 
-                                                   x-model="getWorkTime(day).breakEnd"
-                                                   placeholder="--:--"
-                                                   class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                                   style="font-size: 10px;">
-                                        </div>
+                                        <template x-if="getWorkTime(day)">
+                                            <div class="space-y-1">
+                                                <!-- Рабочее время -->
+                                                <input type="time" 
+                                                       x-model="getWorkTime(day).start"
+                                                       class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                                       style="font-size: 10px;">
+                                                <input type="time" 
+                                                       x-model="getWorkTime(day).end"
+                                                       class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                                       style="font-size: 10px;">
+                                                
+                                                <!-- Поля перерыва -->
+                                                <div x-show="getWorkTime(day)?.hasBreak" x-transition class="space-y-1 pt-1 border-t border-gray-200">
+                                                    <div class="text-xs text-gray-400 text-center" style="font-size: 9px;">Перерыв</div>
+                                                    <input type="time" 
+                                                           x-model="getWorkTime(day).breakStart"
+                                                           placeholder="--:--"
+                                                           class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                                           style="font-size: 10px;">
+                                                    <input type="time" 
+                                                           x-model="getWorkTime(day).breakEnd"
+                                                           placeholder="--:--"
+                                                           class="w-full text-xs border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                                           style="font-size: 10px;">
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -649,7 +653,7 @@
                                     <span class="text-sm text-gray-600">Добавить перерыв</span>
                                 </label>
                             </div>
-                            <div x-show="templateToSave.hasBreak" x-transition class="flex items-center gap-3">
+                            <div x-show="templateToSave?.hasBreak" x-transition class="flex items-center gap-3">
                                 <div class="flex items-center gap-2">
                                     <label class="text-sm text-gray-600">с</label>
                                     <input type="time" 

@@ -1,13 +1,13 @@
 export default (initialWorkingDays, initialTemplates) => ({
     currentMonth: new Date(),
-    workingDays: initialWorkingDays || {},
+    workingDays: (initialWorkingDays && typeof initialWorkingDays === 'object' && !Array.isArray(initialWorkingDays)) ? initialWorkingDays : {},
     savedTemplates: initialTemplates || [
         { name: 'Будни', start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00', hasBreak: true, workingDaysOfWeek: [1, 2, 3, 4, 5] },
         { name: 'Выходные', start: '10:00', end: '15:00', breakStart: '', breakEnd: '', hasBreak: false, workingDaysOfWeek: [6, 7] }
     ],
     showTemplateModal: false,
     newTemplateName: '',
-    templateToSave: null,
+    templateToSave: { start: '', end: '', breakStart: '', breakEnd: '', hasBreak: false, workingDaysOfWeek: [] },
     openMenuDay: null,
     editingTemplateIndex: null,
     
@@ -184,7 +184,7 @@ export default (initialWorkingDays, initialTemplates) => ({
         
         this.showTemplateModal = false;
         this.newTemplateName = '';
-        this.templateToSave = null;
+        this.templateToSave = { start: '', end: '', breakStart: '', breakEnd: '', hasBreak: false, workingDaysOfWeek: [] };
         this.editingTemplateIndex = null;
     },
     
@@ -215,7 +215,7 @@ export default (initialWorkingDays, initialTemplates) => ({
     
     async saveCalendar() {
         try {
-            const response = await fetch('/lk/specialists/calendar/save', {
+            const response = await fetch('/my-profile/calendar', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -226,6 +226,12 @@ export default (initialWorkingDays, initialTemplates) => ({
                     templates: this.savedTemplates
                 })
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const result = await response.json();
             
@@ -239,11 +245,11 @@ export default (initialWorkingDays, initialTemplates) => ({
                     notification.remove();
                 }, 3000);
             } else {
-                alert('Ошибка при сохранении календаря');
+                alert('Ошибка при сохранении календаря: ' + (result.message || 'Неизвестная ошибка'));
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Произошла ошибка при сохранении');
+            alert('Произошла ошибка при сохранении: ' + error.message);
         }
     }
 });
